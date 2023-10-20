@@ -2,63 +2,59 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include "const.h"
+#include "client_headers/client_login.h"
 
-#define SERVER_IP "127.0.0.1"  // IP
-#define PORT 52001               // port
-#define BUFFER_SIZE 1024       // buffer size
-
-void login(int client_fd){
-    char buffer[BUFFER_SIZE] = {0};
-    recv(client_fd, buffer, sizeof(buffer), 0);
-    printf("%s", buffer);
-
-    // send user name to server
-    send(client_fd, "USER anonymous\r\n", strlen("USER anonymous\r\n"), 0);
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_fd, buffer, sizeof(buffer), 0);
-    printf("%s", buffer);
-
-    // enter email as pwd
-    printf("Enter your email as password: ");
-    fgets(email, BUFFER_SIZE, stdin);
-    snprintf(buffer, sizeof(buffer), "PASS %s", email);
-    send(client_fd, buffer, strlen(buffer), 0);
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_fd, buffer, sizeof(buffer), 0);
-    printf("%s", buffer);
+void client_handler(int client_sock){
+    int login_flag = client_login(client_sock);
+    if (login_flag == 1){
+        printf("login failed!\r\n");
+        close(client_sock);
+        return; // show login failed.
+    }
+    while(1){
+        // TODO
+    }
+    close(client_sock);
+    return;
 }
 
-int main() {
+int main(int argc, char **argv) {
+    int client_sock;
     struct sockaddr_in address;
-    int client_fd = 0;
-    char email[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE];
 
-    // create Socket
-    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Socket creation failed");
+    client_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(client_sock == -1) {
+        perror("Could not create socket");
         exit(EXIT_FAILURE);
     }
 
-    address.sin_family = AF_INET; // IPv4
-    address.sin_port = htons(PORT);
-    
+    address.sin_family = AF_INET;
+    address.sin_port = htons(SERVER_PORT);
+
     if(inet_pton(AF_INET, SERVER_IP, &address.sin_addr) <= 0) {
         perror("Invalid address or Address not supported");
         exit(EXIT_FAILURE);
     }
 
-    // connect
-    if (connect(client_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("Connection failed");
+    if(connect(client_sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("Connection error");
         exit(EXIT_FAILURE);
     }
 
+    client_handler(client_sock);
 
-    // 关闭连接
-    close(client_fd);
+    // while(1) {
+    //     printf("Enter command: ");
+    //     fgets(buffer, sizeof(buffer), stdin);
+    //     send(client_sock, buffer, strlen(buffer), 0);
+    //     int read_size = recv(client_sock, buffer, sizeof(buffer), 0);
+    //     if(read_size > 0) {
+    //         printf("Response: %s\n", buffer);
+    //     }
+    // }
 
     return 0;
 }
