@@ -16,6 +16,7 @@ void client_handler(int client_sock){
     struct TCPConnection file_sock = {0};
     struct IPPort ipport = {0};
     char command[BUFFER_SIZE];
+    char ret_message[BUFFER_SIZE];
     while(1){
         printf("> ");
         fgets(command, sizeof(command), stdin);
@@ -85,6 +86,23 @@ void client_handler(int client_sock){
             } else{
 
             }
+        }
+        else if (strcmp(clean_command, "SYST") == 0 || strcmp(clean_command, "TYPE I") == 0){
+            send(client_sock, clean_command, strlen(clean_command), 0);
+            bzero(ret_message, BUFFER_SIZE);
+            recv(client_sock, ret_message, BUFFER_SIZE, 0);
+            printf("%s\r\n", ret_message);
+        }
+        else if (strcmp(clean_command, "QUIT") == 0 || strcmp(clean_command, "ABOR") == 0){
+            send(client_sock, clean_command, strlen(clean_command), 0);
+            bzero(ret_message, BUFFER_SIZE);
+            recv(client_sock, ret_message, BUFFER_SIZE, 0);
+            printf("%s\r\n", ret_message);
+            if (file_sock.is_active == 1){ // close this client and release resouses
+                close(file_sock.sock_fd);
+                close(client_sock);
+            }
+            return;
         }
         else{
             printf("Error: Wrong command input or not implemented.\r\n");

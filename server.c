@@ -19,7 +19,7 @@ void *client_handler(void *socket_desc) {
     struct timeval timeout;      
     timeout.tv_sec = CONNECT_GAP;
     timeout.tv_usec = 0;
-
+    char ret_message[BUFFER_SIZE];
     if (setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         perror("setsockopt failed\n");
     }
@@ -90,6 +90,18 @@ void *client_handler(void *socket_desc) {
                 };
                 file_sock.is_active = 1;
             }
+        } else if (strcmp(buffer, "SYST") == 0){
+            bzero(ret_message, BUFFER_SIZE);
+            strcpy(ret_message, "215 UNIX Type: L8");
+            send(client_sock, ret_message, strlen(ret_message), 0);
+        } else if (strcmp(buffer, "TYPE I") == 0){
+            bzero(ret_message, BUFFER_SIZE);
+            strcpy(ret_message, "200 Type set to I.");
+            send(client_sock, ret_message, strlen(ret_message), 0);
+        } else if (strcmp(buffer, "ABOR") == 0 || strcmp(buffer, "QUIT") == 0){
+            bzero(ret_message, BUFFER_SIZE);
+            strcpy(ret_message, "221-Thank you for using the FTP service on ftp.ssast.org.\r\n221 Goodbye.\r\n");
+            send(client_sock, ret_message, strlen(ret_message), 0);
         }
 
         memset(buffer, 0, sizeof(buffer));
