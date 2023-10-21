@@ -22,7 +22,6 @@ int client_login(int client_sock) {
     if(read_size > 0){
         printf("%s", buffer);
         if (strncmp(buffer, "331", 3) != 0){
-            printf("here");
             return 1;
         }
         memset(buffer, 0, read_size);

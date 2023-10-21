@@ -11,7 +11,7 @@ struct IPPort server_port(int client_sock, char* buffer) {
     snprintf(ip_port.ip, sizeof(ip_port.ip), "%u.%u.%u.%u", h1, h2, h3, h4);
     ip_port.port = (int)(256 * p1 + p2);
 
-    char message[] = "200 PORT command successful.\r\n";
+    char message[] = "200 PORT command successful.";
     send(client_sock, message, strlen(message), 0);
     return ip_port;
 }

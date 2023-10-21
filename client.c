@@ -58,6 +58,7 @@ void client_handler(int client_sock){
         }
         else if (strncmp(clean_command, "RETR", 4) == 0 || strncmp(clean_command, "STOR", 4) == 0){
             if (file_sock.is_active == 0){
+                send(client_sock, clean_command, strlen(clean_command), 0);
                 file_sock.sock_fd = socket(AF_INET, SOCK_STREAM, 0);
                 if (file_sock.sock_fd == -1){
                     perror("Could not create socket");
@@ -65,7 +66,7 @@ void client_handler(int client_sock){
                 }
                 file_sock.addr.sin_family = AF_INET;
                 file_sock.addr.sin_addr.s_addr = INADDR_ANY;
-                file_sock.addr.sin_port = htonl(ipport.port);
+                file_sock.addr.sin_port = htons(ipport.port);
                 if (bind(file_sock.sock_fd, (struct sockaddr *) & file_sock.addr, sizeof(file_sock.addr)) < 0){
                     perror("Bind failed");
                     exit(EXIT_FAILURE);
@@ -81,6 +82,8 @@ void client_handler(int client_sock){
                     printf("New connection established\r\n");
                 }
                 file_sock.is_active = 1;
+            } else{
+
             }
         }
         else{

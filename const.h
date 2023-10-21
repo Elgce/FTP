@@ -9,7 +9,7 @@
 // define const int
 #define BUFFER_SIZE 1024
 #define CONNECT_GAP 100000
-#define SERVER_PORT 8081
+#define SERVER_PORT 8082
 // define const string
 #define SERVER_IP   "127.0.0.1"
 #define SERVER_NAME "ftp.ssast.org"
