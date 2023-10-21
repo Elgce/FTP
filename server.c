@@ -6,17 +6,15 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include "const.h"
-#include "server_headers/server_login.h"
+#include "server_headers/server_funcs.h"
 
 void *client_handler(void *socket_desc) {
     int client_sock = *(int*)socket_desc;
-    
-    int login_flag = handle_login(client_sock);  // login part
+    int login_flag = server_login(client_sock);  // login part
     if (login_flag == 1){
         close(client_sock);
         return;
     }
-
     // set timeout here, then if socket not receive message for long, close it
     struct timeval timeout;      
     timeout.tv_sec = CONNECT_GAP;
@@ -26,11 +24,11 @@ void *client_handler(void *socket_desc) {
         perror("setsockopt failed\n");
     }
 
-    // 持续监听客户端命令
+    struct TCPConnection file_sock = {0}; // record what port we should use to 
+    struct IPPort ipport = {0}; // record which port to be used
     while(1) {
         char buffer[BUFFER_SIZE];
         int read_size = recv(client_sock, buffer, sizeof(buffer), 0);
-
         if(read_size <= 0) {
             if(errno == EAGAIN || errno == EWOULDBLOCK) {
                 puts("Client timeout. Connection closed");
@@ -40,17 +38,21 @@ void *client_handler(void *socket_desc) {
             fflush(stdout);
             break;
         }
-
-        // 根据接收到的命令调用对应的功能函数
-        if (strncmp(buffer, "LIST", 4) == 0) {
-            // handle_list(client_sock);
-        } else if (strncmp(buffer, "RETRIEVE", 8) == 0) {
+        // handle different commands
+        if (strncmp(buffer, "PORT", 4) == 0) {
+            ipport = server_port(client_sock, buffer);
+            if (file_sock.is_active == 1){ // now using some socket
+                close(file_sock.sock_fd);
+                file_sock.is_active = 0;
+            }
+            
+        } else if (strncmp(buffer, "RESV", 8) == 0) {
             // handle_retrieve(client_sock);
         } else if (strncmp(buffer, "HAHA", 4) == 0){
             //
         }
 
-        memset(buffer, 0, sizeof(buffer));  // 清空缓冲区
+        memset(buffer, 0, sizeof(buffer));
     }
 
     close(client_sock);

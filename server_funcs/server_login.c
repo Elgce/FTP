@@ -1,8 +1,8 @@
 // This file define functions that used for login
-#include "../server_headers/server_login.h"
+#include "../server_headers/server_funcs.h"
 #include "../const.h"
 
-int handle_login(int client_sock) {
+int server_login(int client_sock) {
     char buffer[BUFFER_SIZE];
     char server_name[] = "Anonymous";
     char response[BUFFER_SIZE];
@@ -23,12 +23,10 @@ int handle_login(int client_sock) {
         }
         else{
             send(client_sock, "530 Wrong pwd input.\r\n", strlen("530 Wrong pwd input.\r\n"), 0);
-            close(client_sock);
             return 1;
         }
     } else {
         send(client_sock, "530 Invalid user.\r\n", strlen("530 Invalid user.\r\n"), 0);
-        close(client_sock);
         return 1;
     }
 }

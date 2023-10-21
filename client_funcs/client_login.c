@@ -1,5 +1,5 @@
 // This file define how client acts to login server
-#include "../client_headers/client_login.h"
+#include "../client_headers/client_funcs.h"
 #include "../const.h"
 
 int client_login(int client_sock) {

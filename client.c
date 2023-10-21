@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "const.h"
-#include "client_headers/client_login.h"
+#include "client_headers/client_funcs.h"
 
 void client_handler(int client_sock){
     int login_flag = client_login(client_sock);
@@ -13,8 +13,20 @@ void client_handler(int client_sock){
         close(client_sock);
         return; // show login failed.
     }
+    char command[BUFFER_SIZE];
     while(1){
-        // TODO
+        printf("> ");
+        fgets(command, sizeof(command), stdin);
+        char* clean_command = strtok(command, "\n\r");
+        if (strncmp(clean_command, "PORT", 4) == 0){
+            client_port(client_sock, command);
+        }
+        else if (strncmp(clean_command, "RESV", 4) == 0){
+            printf("wrong!\r\n");
+        }
+        else{
+            printf("Error: Wrong command input or not implemented.");
+        }
     }
     close(client_sock);
     return;
@@ -45,16 +57,6 @@ int main(int argc, char **argv) {
     }
 
     client_handler(client_sock);
-
-    // while(1) {
-    //     printf("Enter command: ");
-    //     fgets(buffer, sizeof(buffer), stdin);
-    //     send(client_sock, buffer, strlen(buffer), 0);
-    //     int read_size = recv(client_sock, buffer, sizeof(buffer), 0);
-    //     if(read_size > 0) {
-    //         printf("Response: %s\n", buffer);
-    //     }
-    // }
 
     return 0;
 }
