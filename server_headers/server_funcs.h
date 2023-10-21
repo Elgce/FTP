@@ -10,5 +10,8 @@
 int server_login(int client_sock);
 struct IPPort server_port(int client_sock, char* buffer);
 struct IPPort server_pasv(int client_sock);
+void server_retr(int client_sock, char* command);
+void server_stor(int client_sock, char* command);
+
 
 #endif

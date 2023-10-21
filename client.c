@@ -58,8 +58,9 @@ void client_handler(int client_sock){
             file_sock.is_active = 1;
         }
         else if (strncmp(clean_command, "RETR", 4) == 0 || strncmp(clean_command, "STOR", 4) == 0){
+            send(client_sock, clean_command, strlen(clean_command), 0);
             if (file_sock.is_active == 0){
-                send(client_sock, clean_command, strlen(clean_command), 0);
+                
                 file_sock.sock_fd = socket(AF_INET, SOCK_STREAM, 0);
                 if (file_sock.sock_fd == -1){
                     perror("Could not create socket");
@@ -83,8 +84,16 @@ void client_handler(int client_sock){
                     printf("New connection established\r\n");
                 }
                 file_sock.is_active = 1;
-            } else{
-
+            }
+            if (strncmp(clean_command, "RETR", 4) == 0){
+                client_retr(file_sock.sock_fd, clean_command);
+                file_sock.is_active = 0;
+                close(file_sock.sock_fd);
+            }
+            else if (strncmp(clean_command, "STOR", 4) == 0){
+                client_stor(file_sock.sock_fd, clean_command);
+                file_sock.is_active = 0;
+                close(file_sock.sock_fd);
             }
         }
         else if (strcmp(clean_command, "SYST") == 0 || strcmp(clean_command, "TYPE I") == 0){
