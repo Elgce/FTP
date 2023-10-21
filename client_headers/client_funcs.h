@@ -5,6 +5,7 @@
 #include <string.h>
 
 int client_login(int client_sock);
-int client_port(int client_sock, char* command);
+struct IPPort client_port(int client_sock, char* command);
+struct IPPort client_pasv(int client_sock, char* command);
 
 #endif
