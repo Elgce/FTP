@@ -122,8 +122,8 @@ void client_handler(int client_sock){
             printf("%s\r\n", ret_message);
             if (file_sock.is_active == 1){ // close this client and release resouses
                 close(file_sock.sock_fd);
-                close(client_sock);
             }
+            close(client_sock);
             return;
         }
         else if (strncmp(clean_command, "MKD", 3) == 0 || strncmp(clean_command, "CWD", 3) == 0 || strncmp(clean_command, "PWD", 3) == 0 \

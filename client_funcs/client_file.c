@@ -7,15 +7,13 @@ void client_retr(int client_sock, char* command){ // ask from server
     // RETR <filename>
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    char all_file_name[BUFFER_SIZE];
     int recv_size;
     
     sscanf(command, "RETR %s", &file_name);
-    snprintf(all_file_name, sizeof(all_file_name), "%s%s", CLIENT_SAVE_PATH, file_name);
 
-    FILE* file = fopen(all_file_name, "wb");
+    FILE* file = fopen(file_name, "wb");
     if (file == NULL){
-        printf("Failed to write %s\r\n", all_file_name);
+        printf("Failed to write %s\r\n", file_name);
         return;
     }
     while(1){
@@ -37,13 +35,11 @@ void client_stor(int client_sock, char* command){ // send to server
     // STOR <filename>
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    char all_file_name[BUFFER_SIZE];
     int recv_size;
     sscanf(command, "STOR %s", &file_name);
-    snprintf(all_file_name, sizeof(all_file_name), "%s%s", CLIENT_SAVE_PATH, file_name);
-    FILE* file = fopen(all_file_name, "rb");
+    FILE* file = fopen(file_name, "rb");
     if (file == NULL){
-        printf("Failed to read %s\r\n", all_file_name);
+        printf("Failed to read %s\r\n", file_name);
         return;
     }
     while(1){ 

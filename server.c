@@ -27,6 +27,8 @@ void *client_handler(void *socket_desc) {
     struct TCPConnection file_sock = {0}; // record what port we should use to 
     struct IPPort ipport = {0}; // record which port to be used
     int pasv_fail = 0;
+    int rnfr_flag = 0;
+    char file_rename[BUFFER_SIZE];
     while(1) {
         char buffer[BUFFER_SIZE];
         int read_size = recv(client_sock, buffer, sizeof(buffer), 0);
@@ -115,25 +117,47 @@ void *client_handler(void *socket_desc) {
                 file_sock.is_active = 0;
                 close(file_sock.sock_fd);
             } else if (strncmp(buffer, "LIST", 4) == 0){
-                printf("debug1\r\n");
                 server_list(file_sock.sock_fd, client_sock);
                 file_sock.is_active = 0;
                 close(file_sock.sock_fd);
             }
-        } else if (strcmp(buffer, "SYST") == 0){
+        } else if (strcmp(buffer, "SYST\r\n") == 0){
             bzero(ret_message, BUFFER_SIZE);
             strcpy(ret_message, "215 UNIX Type: L8");
             send(client_sock, ret_message, strlen(ret_message), 0);
-        } else if (strcmp(buffer, "TYPE I") == 0){
+        } else if (strcmp(buffer, "TYPE I\r\n") == 0){
             bzero(ret_message, BUFFER_SIZE);
             strcpy(ret_message, "200 Type set to I.");
             send(client_sock, ret_message, strlen(ret_message), 0);
-        } else if (strcmp(buffer, "ABOR") == 0 || strcmp(buffer, "QUIT") == 0){
+        } else if (strcmp(buffer, "ABOR\r\n") == 0 || strcmp(buffer, "QUIT\r\n") == 0){
             bzero(ret_message, BUFFER_SIZE);
             strcpy(ret_message, "221-Thank you for using the FTP service on ftp.ssast.org.\r\n221 Goodbye.\r\n");
             send(client_sock, ret_message, strlen(ret_message), 0);
+            break;
+        } else if (strncmp(buffer, "MKD", 3) == 0){
+            server_mkd(client_sock, buffer);
+        } else if (strncmp(buffer, "RMD", 3) == 0){
+            server_rmd(client_sock, buffer);
+        } else if (strncmp(buffer, "CWD", 3) == 0){
+            server_cwd(client_sock, buffer);
+        } else if (strncmp(buffer, "PWD", 3) == 0){
+            server_pwd(client_sock);
+        } else if (strncmp(buffer, "RNFR", 4) == 0){
+            rnfr_flag = server_rnfr(client_sock, buffer);
+            bzero(file_rename, BUFFER_SIZE);
+            if (rnfr_flag == 1){
+                sscanf(buffer, "RNFR %s", &file_rename);
+            }
+        } else if (strncmp(buffer, "RNTO", 4) == 0){
+            if (rnfr_flag == 0){
+                bzero(ret_message, BUFFER_SIZE);
+                strcpy(ret_message, "503 Bad sequence of commands");
+                send(client_sock, ret_message, strlen(ret_message), 0);
+                continue;
+            }
+            server_rnto(client_sock, buffer, file_rename);
+            rnfr_flag = 0;
         }
-
         memset(buffer, 0, sizeof(buffer));
     }
 
@@ -142,7 +166,17 @@ void *client_handler(void *socket_desc) {
     return;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    int port = 21; // 默认端口
+
+    for (int i = 1; i < argc - 1; i++) { 
+        if (strcmp(argv[i], "-p") == 0) {
+            port = atoi(argv[i + 1]);
+            break;
+        }
+    }
+
     int server_sock, client_sock, c;
     struct sockaddr_in server, client;
     pthread_t thread_id;

@@ -1,13 +1,13 @@
 CC = gcc
-CFLAGS = -Wall -I. -Iserver_headers -Iclient_headers
+CFLAGS = -w -I. -Iserver_headers -Iclient_headers
 
 SERVER_SRCS = server.c $(wildcard server_funcs/*.c)
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)
-SERVER_TARGET = server
+SERVER_TARGET = server_file/server
 
 CLIENT_SRCS = client.c $(wildcard client_funcs/*.c)
 CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
-CLIENT_TARGET = client
+CLIENT_TARGET = client_file/client
 
 all: $(SERVER_TARGET) $(CLIENT_TARGET)
 

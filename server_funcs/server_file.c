@@ -6,7 +6,6 @@
 void server_stor(int client_sock, int msg_sock, char* command){
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    char all_file_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
 
     bzero(message, BUFFER_SIZE);
@@ -14,8 +13,7 @@ void server_stor(int client_sock, int msg_sock, char* command){
     send(msg_sock, message, strlen(message), 0);
 
     sscanf(command, "STOR %s", &file_name);
-    snprintf(all_file_name, sizeof(all_file_name), "%s%s", SERVER_SAVE_PATH, file_name);
-    FILE* file = fopen(all_file_name, "wb");
+    FILE* file = fopen(file_name, "wb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);
         strcpy(message, "450 Can't write file.");
@@ -51,7 +49,6 @@ void server_retr(int client_sock, int msg_sock, char* command){
     // STOR <filename>
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    char all_file_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
 
     bzero(message, BUFFER_SIZE);
@@ -59,8 +56,7 @@ void server_retr(int client_sock, int msg_sock, char* command){
     send(msg_sock, message, strlen(message), 0);
 
     sscanf(command, "RETR %s", &file_name);
-    snprintf(all_file_name, sizeof(all_file_name), "%s%s", SERVER_SAVE_PATH, file_name);
-    FILE* file = fopen(all_file_name, "rb");
+    FILE* file = fopen(file_name, "rb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);
         strcpy(message, "451 Can't read file.");

@@ -1,3 +1,5 @@
 **/**.o
 client
 server
+server_file/**
+client_file/**
