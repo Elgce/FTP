@@ -20,16 +20,18 @@ void client_handler(int client_sock){
     while(1){
         printf("> ");
         fgets(command, sizeof(command), stdin);
-        char* clean_command = strtok(command, "\n\r");
+        char* tmp_command = strtok(command, "\n\r");
+        char clean_command[BUFFER_SIZE];
+        snprintf(clean_command, sizeof(clean_command), "%s\r\n", tmp_command);
         if (strncmp(clean_command, "PORT", 4) == 0){
-            ipport = client_port(client_sock, command);
+            ipport = client_port(client_sock, clean_command);
             if (file_sock.is_active == 1){
                 close(file_sock.sock_fd);
                 file_sock.is_active = 0;
             }
         }
         else if (strncmp(clean_command, "PASV", 4) == 0){
-            ipport = client_pasv(client_sock, command);
+            ipport = client_pasv(client_sock, clean_command);
             if (file_sock.is_active == 1){
                 // close old connection
                 close(file_sock.sock_fd);
@@ -57,10 +59,9 @@ void client_handler(int client_sock){
             }
             file_sock.is_active = 1;
         }
-        else if (strncmp(clean_command, "RETR", 4) == 0 || strncmp(clean_command, "STOR", 4) == 0){
+        else if (strncmp(clean_command, "RETR", 4) == 0 || strncmp(clean_command, "STOR", 4) == 0 || strncmp(clean_command, "LIST", 4) == 0){
             send(client_sock, clean_command, strlen(clean_command), 0);
             if (file_sock.is_active == 0){
-                
                 file_sock.sock_fd = socket(AF_INET, SOCK_STREAM, 0);
                 if (file_sock.sock_fd == -1){
                     perror("Could not create socket");
@@ -85,24 +86,36 @@ void client_handler(int client_sock){
                 }
                 file_sock.is_active = 1;
             }
+            
+            char server_response[BUFFER_SIZE];
+            int recv_size = recv(client_sock, server_response, sizeof(server_response), 0);
+            server_response[recv_size] = '\0';
+            printf("%s\r\n", server_response);
+            
             if (strncmp(clean_command, "RETR", 4) == 0){
                 client_retr(file_sock.sock_fd, clean_command);
                 file_sock.is_active = 0;
-                close(file_sock.sock_fd);
             }
             else if (strncmp(clean_command, "STOR", 4) == 0){
                 client_stor(file_sock.sock_fd, clean_command);
                 file_sock.is_active = 0;
-                close(file_sock.sock_fd);
             }
+            else if (strncmp(clean_command, "LIST", 4) == 0){
+                recv_size = recv(file_sock.sock_fd, server_response, sizeof(server_response), 0);
+                server_response[recv_size] = '\0';
+                printf("%s\r\n", server_response);
+            }
+            recv_size = recv(client_sock, server_response, sizeof(server_response), 0);
+            server_response[recv_size] = '\0';
+            printf("%s\r\n", server_response);
         }
-        else if (strcmp(clean_command, "SYST") == 0 || strcmp(clean_command, "TYPE I") == 0){
+        else if (strcmp(clean_command, "SYST\r\n") == 0 || strcmp(clean_command, "TYPE I\r\n") == 0){
             send(client_sock, clean_command, strlen(clean_command), 0);
             bzero(ret_message, BUFFER_SIZE);
             recv(client_sock, ret_message, BUFFER_SIZE, 0);
             printf("%s\r\n", ret_message);
         }
-        else if (strcmp(clean_command, "QUIT") == 0 || strcmp(clean_command, "ABOR") == 0){
+        else if (strcmp(clean_command, "QUIT\r\n") == 0 || strcmp(clean_command, "ABOR\r\n") == 0){
             send(client_sock, clean_command, strlen(clean_command), 0);
             bzero(ret_message, BUFFER_SIZE);
             recv(client_sock, ret_message, BUFFER_SIZE, 0);
@@ -112,6 +125,13 @@ void client_handler(int client_sock){
                 close(client_sock);
             }
             return;
+        }
+        else if (strncmp(clean_command, "MKD", 3) == 0 || strncmp(clean_command, "CWD", 3) == 0 || strncmp(clean_command, "PWD", 3) == 0 \
+        || strncmp(clean_command, "RMD", 3) == 0 || strncmp(clean_command, "RNFR", 4) == 0 || strncmp(clean_command, "RNTO", 4) == 0){
+            send(client_sock, clean_command, strlen(clean_command), 0);
+            bzero(ret_message, BUFFER_SIZE);
+            recv(client_sock, ret_message, BUFFER_SIZE, 0);
+            printf("%s\r\n", ret_message);
         }
         else{
             printf("Error: Wrong command input or not implemented.\r\n");

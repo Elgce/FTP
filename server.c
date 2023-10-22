@@ -41,6 +41,7 @@ void *client_handler(void *socket_desc) {
         }
         // handle different commands
         if (strncmp(buffer, "PORT", 4) == 0) {
+            pasv_fail = 0;
             ipport = server_port(client_sock, buffer);
             if (file_sock.is_active == 1){ // now using some socket
                 close(file_sock.sock_fd);
@@ -72,42 +73,50 @@ void *client_handler(void *socket_desc) {
                 pasv_fail = 1;
             }
             file_sock.is_active = 1;
-        } else if (strncmp(buffer, "RETR", 4) == 0 || strncmp(buffer, "STOR", 4) == 0){
+        } else if (strncmp(buffer, "RETR", 4) == 0 || strncmp(buffer, "STOR", 4) == 0 || strncmp(buffer, "LIST", 4) == 0){
             if (file_sock.is_active == 0){ // if all things ok, means used port
                 // build up new connection
                 file_sock.sock_fd = socket(AF_INET, SOCK_STREAM, 0);
                 if(file_sock.sock_fd == -1){
-                    char message[] = "425 TCP not established.";
-                    send(client_sock, message, strlen(message), 0);
+                    bzero(ret_message, BUFFER_SIZE);
+                    strcpy(ret_message, "425 TCP not established.");
+                    send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 }
                 file_sock.addr.sin_family = AF_INET;
                 file_sock.addr.sin_addr.s_addr = INADDR_ANY;
                 file_sock.addr.sin_port = htons(ipport.port);
                 if (inet_pton(AF_INET, ipport.ip, &file_sock.addr.sin_addr) <= 0){
-                    char message[] = "425 TCP not established.";
-                    send(client_sock, message, strlen(message), 0);
+                    bzero(ret_message, BUFFER_SIZE);
+                    strcpy(ret_message, "425 TCP not established.");
+                    send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 }
                 if (connect(file_sock.sock_fd, (struct sockaddr *)&file_sock.addr, sizeof(file_sock.addr)) < 0){
-                    char message[] = "425 TCP not established.";
-                    send(client_sock, message, strlen(message), 0);
+                    bzero(ret_message, BUFFER_SIZE);
+                    strcpy(ret_message, "425 TCP not established.");
+                    send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 };
                 file_sock.is_active = 1;
             }
             else if (pasv_fail == 1){
-                char message[] = "425 TCP not established.";
-                send(client_sock, message, strlen(message), 0);
+                bzero(ret_message, BUFFER_SIZE);
+                strcpy(ret_message, "425 TCP not established.");
+                send(client_sock, ret_message, strlen(ret_message), 0);
                 continue;
             }
             if (strncmp(buffer, "RETR", 4) == 0){
-                server_retr(file_sock.sock_fd, buffer);
+                server_retr(file_sock.sock_fd, client_sock, buffer);
                 file_sock.is_active = 0;
                 close(file_sock.sock_fd);
-            }
-            else if (strncmp(buffer, "STOR", 4) == 0){
-                server_stor(file_sock.sock_fd, buffer);
+            } else if (strncmp(buffer, "STOR", 4) == 0){
+                server_stor(file_sock.sock_fd, client_sock, buffer);
+                file_sock.is_active = 0;
+                close(file_sock.sock_fd);
+            } else if (strncmp(buffer, "LIST", 4) == 0){
+                printf("debug1\r\n");
+                server_list(file_sock.sock_fd, client_sock);
                 file_sock.is_active = 0;
                 close(file_sock.sock_fd);
             }
