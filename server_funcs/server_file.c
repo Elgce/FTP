@@ -12,7 +12,7 @@ void server_stor(int client_sock, int msg_sock, char* command){
     strcpy(message, "150 Begin transfer");
     send(msg_sock, message, strlen(message), 0);
 
-    sscanf(command, "STOR %s", &file_name);
+    sscanf(command, "STOR %s", file_name);
     FILE* file = fopen(file_name, "wb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);
@@ -55,7 +55,7 @@ void server_retr(int client_sock, int msg_sock, char* command){
     strcpy(message, "150 Begin transfer");
     send(msg_sock, message, strlen(message), 0);
 
-    sscanf(command, "RETR %s", &file_name);
+    sscanf(command, "RETR %s", file_name);
     FILE* file = fopen(file_name, "rb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -w -I. -Iserver_headers -Iclient_headers
+CFLAGS = -Wall -I. -Iserver_headers -Iclient_headers
 
 SERVER_SRCS = server.c $(wildcard server_funcs/*.c)
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)

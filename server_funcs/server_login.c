@@ -29,4 +29,5 @@ int server_login(int client_sock) {
         send(client_sock, "530 Invalid user.\r\n", strlen("530 Invalid user.\r\n"), 0);
         return 1;
     }
+    return 0;
 }

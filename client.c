@@ -95,10 +95,12 @@ void client_handler(int client_sock){
             if (strncmp(clean_command, "RETR", 4) == 0){
                 client_retr(file_sock.sock_fd, clean_command);
                 file_sock.is_active = 0;
+                close(file_sock.sock_fd);
             }
             else if (strncmp(clean_command, "STOR", 4) == 0){
                 client_stor(file_sock.sock_fd, clean_command);
                 file_sock.is_active = 0;
+                close(file_sock.sock_fd);
             }
             else if (strncmp(clean_command, "LIST", 4) == 0){
                 recv_size = recv(file_sock.sock_fd, server_response, sizeof(server_response), 0);
@@ -144,7 +146,6 @@ void client_handler(int client_sock){
 int main(int argc, char **argv) {
     int client_sock;
     struct sockaddr_in address;
-    char buffer[BUFFER_SIZE];
 
     client_sock = socket(AF_INET, SOCK_STREAM, 0);
     if(client_sock == -1) {

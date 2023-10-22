@@ -13,7 +13,7 @@ void *client_handler(void *socket_desc) {
     int login_flag = server_login(client_sock);  // login part
     if (login_flag == 1){
         close(client_sock);
-        return;
+        return NULL;
     }
     // set timeout here, then if socket not receive message for long, close it
     struct timeval timeout;      
@@ -146,7 +146,7 @@ void *client_handler(void *socket_desc) {
             rnfr_flag = server_rnfr(client_sock, buffer);
             bzero(file_rename, BUFFER_SIZE);
             if (rnfr_flag == 1){
-                sscanf(buffer, "RNFR %s", &file_rename);
+                sscanf(buffer, "RNFR %s", file_rename);
             }
         } else if (strncmp(buffer, "RNTO", 4) == 0){
             if (rnfr_flag == 0){
@@ -163,21 +163,21 @@ void *client_handler(void *socket_desc) {
 
     close(client_sock);
     free(socket_desc);
-    return;
+    return NULL;
 }
 
 int main(int argc, char* argv[]) {
 
-    int port = 21; // 默认端口
+    // int port = 21; // 默认端口
 
-    for (int i = 1; i < argc - 1; i++) { 
-        if (strcmp(argv[i], "-p") == 0) {
-            port = atoi(argv[i + 1]);
-            break;
-        }
-    }
+    // for (int i = 1; i < argc - 1; i++) { 
+    //     if (strcmp(argv[i], "-p") == 0) {
+    //         port = atoi(argv[i + 1]);
+    //         break;
+    //     }
+    // }
 
-    int server_sock, client_sock, c;
+    int server_sock, c;
     struct sockaddr_in server, client;
     pthread_t thread_id;
 

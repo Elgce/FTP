@@ -41,7 +41,7 @@ void server_list(int client_sock, int msg_sock){
 void server_mkd(int client_sock, char* command){
     char dir_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-    sscanf(command, "MKD %s", &dir_name);
+    sscanf(command, "MKD %s", dir_name);
     if (mkdir(dir_name, 0777) != 0){
         bzero(message, BUFFER_SIZE);
         strcpy(message, "550 Action not taken");
@@ -56,7 +56,7 @@ void server_mkd(int client_sock, char* command){
 void server_rmd(int client_sock, char* command){
     char dir_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-    sscanf(command, "MKD %s", &dir_name);
+    sscanf(command, "MKD %s", dir_name);
     if (rmdir(dir_name) != 0){
         bzero(message, BUFFER_SIZE);
         strcpy(message, "550 Action not taken");
@@ -86,7 +86,7 @@ void server_pwd(int client_sock){
 void server_cwd(int client_sock, char* command){
     char path[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-    sscanf(command, "CWD %s", &path);
+    sscanf(command, "CWD %s", path);
     
     if(chdir(path) != 0){
         bzero(message, BUFFER_SIZE);
@@ -102,7 +102,7 @@ void server_cwd(int client_sock, char* command){
 int server_rnfr(int client_sock, char* command){
     char file_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-    sscanf(command, "RNFR %s", &file_name);
+    sscanf(command, "RNFR %s", file_name);
     if (access(file_name, F_OK) != 0){
         snprintf(message, sizeof(message), "550 File not found.");
         send(client_sock, message, strlen(message), 0);
@@ -116,7 +116,7 @@ int server_rnfr(int client_sock, char* command){
 void server_rnto(int client_sock, char* command, char* source_name){
     char file_name[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-    sscanf(command, "RNTO %s", &file_name);
+    sscanf(command, "RNTO %s", file_name);
     if (rename(source_name, file_name) == 0){
         snprintf(message, sizeof(message), "250 File/folder successfully renamed");
         send(client_sock, message, strlen(message), 0);

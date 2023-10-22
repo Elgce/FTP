@@ -20,13 +20,13 @@
 #define CLIENT_SAVE_PATH "./client_file/"
 
 // define struct
-typedef struct TCPConnection{
+struct TCPConnection{
     struct sockaddr_in addr;
     int sock_fd; 
     int is_active; // show this tcp is active or not;
 };
 
-typedef struct IPPort{
+struct IPPort{
     char ip[20];
     int port;
 }; // store ip:port to be used

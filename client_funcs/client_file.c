@@ -7,9 +7,8 @@ void client_retr(int client_sock, char* command){ // ask from server
     // RETR <filename>
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    int recv_size;
     
-    sscanf(command, "RETR %s", &file_name);
+    sscanf(command, "RETR %s", file_name);
 
     FILE* file = fopen(file_name, "wb");
     if (file == NULL){
@@ -27,7 +26,6 @@ void client_retr(int client_sock, char* command){ // ask from server
         }
     }
     fclose(file);
-    close(client_sock);
     return;
 }
 
@@ -35,8 +33,7 @@ void client_stor(int client_sock, char* command){ // send to server
     // STOR <filename>
     char file_buffer[BUFFER_SIZE];
     char file_name[BUFFER_SIZE];
-    int recv_size;
-    sscanf(command, "STOR %s", &file_name);
+    sscanf(command, "STOR %s", file_name);
     FILE* file = fopen(file_name, "rb");
     if (file == NULL){
         printf("Failed to read %s\r\n", file_name);
@@ -50,6 +47,5 @@ void client_stor(int client_sock, char* command){ // send to server
         send(client_sock, file_buffer, bytesRead, 0);
     }
     fclose(file);
-    close(client_sock);
     return;
 }
