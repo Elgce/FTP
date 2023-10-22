@@ -144,6 +144,25 @@ void client_handler(int client_sock){
 }
 
 int main(int argc, char **argv) {
+    int port = 21; // default port
+
+    for (int i = 1; i < argc - 1; i++) { 
+        if (strcmp(argv[i], "-port") == 0) {
+            port = atoi(argv[i + 1]);
+            break;
+        }
+    }
+    char ipaddr[BUFFER_SIZE] = "127.0.0.1";  
+
+    for (int i = 1; i < argc - 1; i++) {
+        if (strcmp(argv[i], "-ip") == 0) {
+            strncpy(ipaddr, argv[i + 1], sizeof(ipaddr) - 1);
+            ipaddr[sizeof(ipaddr) - 1] = '\0';  // 确保字符串结束符存在
+            break;
+        }
+    }
+
+
     int client_sock;
     struct sockaddr_in address;
 
@@ -155,9 +174,9 @@ int main(int argc, char **argv) {
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(SERVER_PORT);
+    address.sin_port = htons(port);
 
-    if(inet_pton(AF_INET, SERVER_IP, &address.sin_addr) <= 0) {
+    if(inet_pton(AF_INET, ipaddr, &address.sin_addr) <= 0) {
         perror("Invalid address or Address not supported");
         exit(EXIT_FAILURE);
     }

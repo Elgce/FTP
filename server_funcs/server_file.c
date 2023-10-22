@@ -9,14 +9,14 @@ void server_stor(int client_sock, int msg_sock, char* command){
     char message[BUFFER_SIZE];
 
     bzero(message, BUFFER_SIZE);
-    strcpy(message, "150 Begin transfer");
+    strcpy(message, "150 Begin transfer\r\n");
     send(msg_sock, message, strlen(message), 0);
 
     sscanf(command, "STOR %s", file_name);
     FILE* file = fopen(file_name, "wb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);
-        strcpy(message, "450 Can't write file.");
+        strcpy(message, "450 Can't write file.\r\n");
         send(msg_sock, message, strlen(message), 0);
         return;
     }
@@ -27,7 +27,7 @@ void server_stor(int client_sock, int msg_sock, char* command){
         }
         else if (bytesReceived < 0){
             bzero(message, BUFFER_SIZE);
-            strcpy(message, "426 Connection interrupted.");
+            strcpy(message, "426 Connection interrupted.\r\n");
             send(msg_sock, message, strlen(message), 0);
             fclose(file);
             return;
@@ -40,7 +40,7 @@ void server_stor(int client_sock, int msg_sock, char* command){
     }
     fclose(file);
     bzero(message, BUFFER_SIZE);
-    strcpy(message, "226 Transfer successfully.");
+    strcpy(message, "226 Transfer successfully.\r\n");
     send(msg_sock, message, strlen(message), 0);
     return;
 }
@@ -52,14 +52,14 @@ void server_retr(int client_sock, int msg_sock, char* command){
     char message[BUFFER_SIZE];
 
     bzero(message, BUFFER_SIZE);
-    strcpy(message, "150 Begin transfer");
+    strcpy(message, "150 Begin transfer\r\n");
     send(msg_sock, message, strlen(message), 0);
 
     sscanf(command, "RETR %s", file_name);
     FILE* file = fopen(file_name, "rb");
     if (file == NULL){
         bzero(message, BUFFER_SIZE);
-        strcpy(message, "451 Can't read file.");
+        strcpy(message, "451 Can't read file.\r\n");
         send(msg_sock, message, strlen(message), 0);
         return;
     }
@@ -70,7 +70,7 @@ void server_retr(int client_sock, int msg_sock, char* command){
         }
         else if (bytesRead < 0){
             bzero(message, BUFFER_SIZE);
-            strcpy(message, "426 Connection interrupted.");
+            strcpy(message, "426 Connection interrupted.\r\n");
             send(msg_sock, message, strlen(message), 0);
             fclose(file);
             return;
@@ -79,7 +79,7 @@ void server_retr(int client_sock, int msg_sock, char* command){
     }
     fclose(file);
     bzero(message, BUFFER_SIZE);
-    strcpy(message, "226 Transfer successfully.");
+    strcpy(message, "226 Transfer successfully.\r\n");
     send(msg_sock, message, strlen(message), 0);
     return;
 }

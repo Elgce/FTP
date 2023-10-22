@@ -13,7 +13,7 @@ struct IPPort server_pasv(int client_sock){
     ip_port.port = pasv_port;
     strcpy(ip_port.ip, SERVER_IP);
     char message[256];
-    snprintf(message, sizeof(message), "227 Entering Passive Mode (127,0,0,1,%d,%d)", pasv_port / 256, pasv_port % 256);
+    snprintf(message, sizeof(message), "227 Entering Passive Mode (127,0,0,1,%d,%d)\r\n", pasv_port / 256, pasv_port % 256);
     send(client_sock, message, strlen(message), 0);
     return ip_port;
 }
@@ -27,7 +27,7 @@ struct IPPort server_port(int client_sock, char* buffer) {
     snprintf(ip_port.ip, sizeof(ip_port.ip), "%u.%u.%u.%u", h1, h2, h3, h4);
     ip_port.port = (int)(256 * p1 + p2);
 
-    char message[] = "200 PORT command successful.";
+    char message[] = "200 PORT command successful.\r\n";
     send(client_sock, message, strlen(message), 0);
     return ip_port;
 }

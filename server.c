@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "const.h"
 #include "server_headers/server_funcs.h"
 
@@ -40,6 +42,14 @@ void *client_handler(void *socket_desc) {
             }
             fflush(stdout);
             break;
+        }
+        FILE *file = fopen("output.txt", "w"); // 打开文件以写入模式
+
+        if (file != NULL) {
+            fprintf(file, "%s", buffer); // 将buffer的内容写入文件
+            fclose(file); // 关闭文件
+        } else {
+            printf("Error: Unable to open file for writing.\n");
         }
         // handle different commands
         if (strncmp(buffer, "PORT", 4) == 0) {
@@ -81,7 +91,7 @@ void *client_handler(void *socket_desc) {
                 file_sock.sock_fd = socket(AF_INET, SOCK_STREAM, 0);
                 if(file_sock.sock_fd == -1){
                     bzero(ret_message, BUFFER_SIZE);
-                    strcpy(ret_message, "425 TCP not established.");
+                    strcpy(ret_message, "425 TCP not established.\r\n");
                     send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 }
@@ -90,13 +100,13 @@ void *client_handler(void *socket_desc) {
                 file_sock.addr.sin_port = htons(ipport.port);
                 if (inet_pton(AF_INET, ipport.ip, &file_sock.addr.sin_addr) <= 0){
                     bzero(ret_message, BUFFER_SIZE);
-                    strcpy(ret_message, "425 TCP not established.");
+                    strcpy(ret_message, "425 TCP not established.\r\n");
                     send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 }
                 if (connect(file_sock.sock_fd, (struct sockaddr *)&file_sock.addr, sizeof(file_sock.addr)) < 0){
                     bzero(ret_message, BUFFER_SIZE);
-                    strcpy(ret_message, "425 TCP not established.");
+                    strcpy(ret_message, "425 TCP not established.\r\n");
                     send(client_sock, ret_message, strlen(ret_message), 0);
                     continue;
                 };
@@ -104,7 +114,7 @@ void *client_handler(void *socket_desc) {
             }
             else if (pasv_fail == 1){
                 bzero(ret_message, BUFFER_SIZE);
-                strcpy(ret_message, "425 TCP not established.");
+                strcpy(ret_message, "425 TCP not established.\r\n");
                 send(client_sock, ret_message, strlen(ret_message), 0);
                 continue;
             }
@@ -121,15 +131,15 @@ void *client_handler(void *socket_desc) {
                 file_sock.is_active = 0;
                 close(file_sock.sock_fd);
             }
-        } else if (strcmp(buffer, "SYST\r\n") == 0){
+        } else if (strncmp(buffer, "SYST", 4) == 0){
             bzero(ret_message, BUFFER_SIZE);
-            strcpy(ret_message, "215 UNIX Type: L8");
+            strcpy(ret_message, "215 UNIX Type: L8\r\n");
             send(client_sock, ret_message, strlen(ret_message), 0);
-        } else if (strcmp(buffer, "TYPE I\r\n") == 0){
+        } else if (strncmp(buffer, "TYPE I", 6) == 0){
             bzero(ret_message, BUFFER_SIZE);
-            strcpy(ret_message, "200 Type set to I.");
+            strcpy(ret_message, "200 Type set to I.\r\n");
             send(client_sock, ret_message, strlen(ret_message), 0);
-        } else if (strcmp(buffer, "ABOR\r\n") == 0 || strcmp(buffer, "QUIT\r\n") == 0){
+        } else if (strncmp(buffer, "ABOR", 4) == 0 || strncmp(buffer, "QUIT", 4) == 0){
             bzero(ret_message, BUFFER_SIZE);
             strcpy(ret_message, "221-Thank you for using the FTP service on ftp.ssast.org.\r\n221 Goodbye.\r\n");
             send(client_sock, ret_message, strlen(ret_message), 0);
@@ -151,12 +161,21 @@ void *client_handler(void *socket_desc) {
         } else if (strncmp(buffer, "RNTO", 4) == 0){
             if (rnfr_flag == 0){
                 bzero(ret_message, BUFFER_SIZE);
-                strcpy(ret_message, "503 Bad sequence of commands");
+                strcpy(ret_message, "503 Bad sequence of commands\r\n");
                 send(client_sock, ret_message, strlen(ret_message), 0);
                 continue;
             }
             server_rnto(client_sock, buffer, file_rename);
             rnfr_flag = 0;
+        } else{
+            FILE *file = fopen("aoutput.txt", "w"); // 打开文件以写入模式
+
+            if (file != NULL) {
+                fprintf(file, "%s", buffer); // 将buffer的内容写入文件
+                fclose(file); // 关闭文件
+            } else {
+                printf("Error: Unable to open file for writing.\n");
+            }
         }
         memset(buffer, 0, sizeof(buffer));
     }
@@ -168,14 +187,37 @@ void *client_handler(void *socket_desc) {
 
 int main(int argc, char* argv[]) {
 
-    // int port = 21; // 默认端口
+    int port = 21; // default port
 
-    // for (int i = 1; i < argc - 1; i++) { 
-    //     if (strcmp(argv[i], "-p") == 0) {
-    //         port = atoi(argv[i + 1]);
-    //         break;
-    //     }
-    // }
+    for (int i = 1; i < argc - 1; i++) { 
+        if (strcmp(argv[i], "-port") == 0) {
+            port = atoi(argv[i + 1]);
+            break;
+        }
+    }
+    char root_file[BUFFER_SIZE] = "/tmp";  
+
+    for (int i = 1; i < argc - 1; i++) {
+        if (strcmp(argv[i], "-root") == 0) {
+            strncpy(root_file, argv[i + 1], sizeof(root_file) - 1);
+            root_file[sizeof(root_file) - 1] = '\0';  // 确保字符串结束符存在
+            break;
+        }
+    }
+
+    struct stat st = {0};
+
+    if (stat(root_file, &st) == -1) {  
+        if (mkdir(root_file, 0700) != 0) {  
+            perror("mkdir error");  
+            return 1;
+        }
+    }
+
+    if (chdir(root_file) != 0) {  
+        perror("chdir error");  
+        return 1;
+    }
 
     int server_sock, c;
     struct sockaddr_in server, client;
@@ -189,7 +231,7 @@ int main(int argc, char* argv[]) {
 
     server.sin_family = AF_INET; // IPv4
     server.sin_addr.s_addr = INADDR_ANY; // from any address
-    server.sin_port = htons(SERVER_PORT); 
+    server.sin_port = htons(port); 
 
     if (bind(server_sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Bind failed");

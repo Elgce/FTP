@@ -9,7 +9,7 @@
 // define const int
 #define BUFFER_SIZE 1024
 #define CONNECT_GAP 100000
-#define SERVER_PORT 8081
+#define SERVER_PORT 8083
 #define SERVER_START 20000
 
 // define const string

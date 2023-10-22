@@ -34,7 +34,7 @@ int client_login(int client_sock) {
     char cmd[BUFFER_SIZE];
     snprintf(cmd, sizeof(cmd), "PASS %s\r\n", buffer);
     send(client_sock, cmd, strlen(cmd), 0);
-    
+    bzero(buffer, sizeof(buffer));
     read_size = recv(client_sock, buffer, sizeof(buffer), 0);
     if(read_size > 0) {
         printf("%s", buffer);
